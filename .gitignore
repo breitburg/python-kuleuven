@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Local secrets
+.env
+.toledo-session.json
+.toledo-cookies.json
+.proof-cookies.json
+
+# macOS
+.DS_Store
+
+# Playwright MCP artifacts
+.playwright-mcp/
