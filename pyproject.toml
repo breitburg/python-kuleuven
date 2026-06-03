@@ -1,10 +1,10 @@
 [project]
-name = "python-toledo"
+name = "python-kuleuven"
 version = "0.1.0"
-description = "Reverse-engineered KU Leuven Toledo SSO flow — README + proof-of-concept."
+description = "KU Leuven CLI, an MCP, and a Python library"
 readme = "README.md"
 authors = [
-    { name = "Ilia Breitburg", email = "ilya.breytburg@gmail.com" }
+    { name = "Ilia Breitburg", email = "me@breitburg.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
