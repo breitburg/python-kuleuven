@@ -131,10 +131,6 @@ kuleuven session status
 
 The `authentication_context_class` field is the canonical signal for whether the session was 2FA-elevated; `MobileTwoFactorContract` confirms it was. Exits `1` with `reason: "no_session"` if nothing is saved, or `reason: "expired"` if the saved session no longer works.
 
-```sh
-kuleuven session status
-```
-
 ```json
 {
   "authenticated": true,
@@ -152,10 +148,6 @@ kuleuven session status
 Deletes the saved session. Idempotent — `removed` is `false` if there was nothing to delete.
 
 ```text
-kuleuven session end
-```
-
-```sh
 kuleuven session end
 ```
 
