@@ -1,6 +1,6 @@
 # python-kuleuven
 
-CLI and Python client for KU Leuven Toledo. Signs in via the reverse-engineered SAML2 SSO flow against `idp.kuleuven.be` and gives you one session that works against `toledo.kuleuven.be/portal/api/*` (the portal), `ultra.edu.kuleuven.cloud/learn/api/v1/*` (Blackboard Ultra), and `kurt3.ghum.kuleuven.be/api/*` (the KURT study-space reservation system).
+CLI, MCP server, and Python client for KU Leuven. Signs in via the reverse-engineered SAML2 SSO flow against `idp.kuleuven.be` and gives you one session that works against `toledo.kuleuven.be/portal/api/*` (the portal), `ultra.edu.kuleuven.cloud/learn/api/v1/*` (Blackboard Ultra), and `kurt3.ghum.kuleuven.be/api/*` (the KURT study-space reservation system).
 
 See [`docs/AUTH.md`](docs/AUTH.md) for the SAML flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface.
 
@@ -982,7 +982,7 @@ kuleuven mcp uninstall
 
 ## Python API
 
-The library is split along the same axis as the CLI: `kuleuven.session.KuleuvenSession` owns the `httpx.Client` and the SAML handshake; `kuleuven.toledo.ToledoClient` exposes Toledo/Ultra endpoints as methods; `kuleuven.kurt.KurtClient` exposes the KURT endpoints. Both per-service clients are constructed from a `KuleuvenSession` and share its cookie jar. Dataclasses in `kuleuven.models` represent the domain.
+The library is split along the same axis as the CLI: `kuleuven.session.KuleuvenSession` owns the `httpx.Client` and the SAML handshake; `kuleuven.toledo.ToledoClient` exposes Toledo/Ultra endpoints as methods; `kuleuven.kurt.KurtClient` exposes the KURT endpoints. Both per-service clients are constructed from a `KuleuvenSession` and share its cookie jar. Pydantic models in `kuleuven.models` represent the domain.
 
 The library does not persist cookies — that lives in `kuleuven.cli.storage` and is only wired up by the CLI. To reuse a saved session in your own code, build an `httpx.Client` with cookies you loaded yourself and pass it as `KuleuvenSession(http_client=...)`.
 
@@ -1136,7 +1136,7 @@ Constructed from a `KuleuvenSession`. Wraps `kurt3.ghum.kuleuven.be/api`; auth i
 from kuleuven import KuleuvenSession, KurtClient
 
 with KuleuvenSession() as session:
-    session.sign_in("r0123456", "...", lambda: "123456")
+    session.sign_in("r0123456", "...", provider=Authenticator())
     kurt = KurtClient(session)
     reservations = kurt.list_reservations()
 ```
@@ -1162,12 +1162,14 @@ The module also exposes `has_session(http_client) -> bool` — a cookie-jar chec
 
 ### Exceptions
 
-The library raises four things:
+The library raises these:
 
 | Exception | When |
 | --- | --- |
-| `kuleuven.AuthenticationError` | Any failure in the SAML or per-SP bootstrap flow. |
+| `kuleuven.AuthenticationError` | Any failure in the SAML or per-SP bootstrap flow. Base class for the auth exceptions below. |
 | `kuleuven.InvalidCredentialsError` | The IdP rejected the username or password. Inherits from `AuthenticationError`. |
+| `kuleuven.AuthApprovalTimeoutError` | The KU Leuven Authenticator push was not approved within 120 s. Inherits from `AuthenticationError`. |
+| `kuleuven.AuthApprovalFailedError` | The push was rejected or the WebSocket errored. Inherits from `AuthenticationError`. |
 | `kuleuven.SessionExpiredError` | An API call hit a Shibboleth re-auth bounce instead of the real endpoint — the SP session expired. Raised by `KurtClient`. Inherits from `AuthenticationError`. |
 | `httpx.HTTPError` | Raised by the per-domain helpers and the underlying HTTP layer. Propagated, not wrapped. |
 
