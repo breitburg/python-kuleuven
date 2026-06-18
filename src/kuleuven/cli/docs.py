@@ -4,7 +4,7 @@ from typer.cli import get_docs_for_click
 
 
 def docs() -> None:
-    """Print Markdown docs for every command and subcommand."""
+    """Markdown docs for AI agents and humans"""
     # Imported lazily: kuleuven.cli builds `app` by importing this module.
     from kuleuven.cli import app
 
