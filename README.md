@@ -76,6 +76,30 @@ The global environment variables:
 | `KULEUVEN_TOTP` | `session start` | 6-digit TOTP code for two-factor sign-in. |
 | `KULEUVEN_AUTH_DEVICE` | `session start` | KU Leuven Authenticator device to push to: a name, 1-based index, or `most-recent`. |
 
+### Docs
+
+#### `kuleuven docs`
+
+Prints Markdown documentation for the whole command tree — every command and subcommand, with usage, arguments, and options — so an agent can read the full surface in one call instead of walking `--help` group by group. The Markdown is generated from the live Typer app, so it never drifts from the real CLI. Needs no session and makes no network calls.
+
+```text
+kuleuven docs
+```
+
+The Markdown is returned as a string under the `docs` key (the command still emits a single JSON object, per the contract). `format` is always `markdown`. Exits `0`.
+
+```sh
+kuleuven docs | jq -r .docs
+```
+
+```json
+{
+  "status": "ok",
+  "format": "markdown",
+  "docs": "# `kuleuven`\n\nKU Leuven CLI\n..."
+}
+```
+
 ### Session
 
 #### `kuleuven session start`
