@@ -6,6 +6,7 @@ from kuleuven.cli import storage
 from kuleuven.cli.content import content_app
 from kuleuven.cli.courses import courses_app
 from kuleuven.cli.discussions import discussions_app
+from kuleuven.cli.docs import docs
 from kuleuven.cli.files import files_app
 from kuleuven.cli.kurt import kurt_app
 from kuleuven.cli.mcp import mcp_app
@@ -46,6 +47,7 @@ toledo_app.add_typer(courses_app, name="courses")
 
 session_app.command(name="raw")(raw)
 
+app.command(name="docs")(docs)
 app.add_typer(session_app, name="session")
 app.add_typer(toledo_app, name="toledo")
 app.add_typer(kurt_app, name="kurt")

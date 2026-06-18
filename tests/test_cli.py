@@ -113,3 +113,34 @@ class TestEmitContract:
 
         with pytest.raises(TypeError, match="not JSON serializable"):
             _json_default(object())
+
+
+class TestDocs:
+    def test_docs_emits_markdown_for_the_whole_tree(self, runner):
+        # No network: docs renders the in-process command tree, so it must work
+        # without a session.
+        result = runner.invoke(app, ["docs"])
+
+        assert result.exit_code == 0
+        payload = parse_stdout(result)
+        assert payload["status"] == "ok"
+        assert payload["format"] == "markdown"
+
+        markdown = payload["docs"]
+        assert markdown.startswith("# `kuleuven`")
+        # Nested commands at every depth are present.
+        for heading in (
+            "## `kuleuven session`",
+            "### `kuleuven session start`",
+            "#### `kuleuven kurt resources book`",
+        ):
+            assert heading in markdown
+
+    def test_docs_includes_arguments_options_and_env_vars(self, runner):
+        result = runner.invoke(app, ["docs"])
+        markdown = parse_stdout(result)["docs"]
+
+        # Help text, env-var bindings, and positional arguments all survive.
+        assert "[env var: KULEUVEN_USERNAME]" in markdown
+        assert "RESERVATION_ID" in markdown
+        assert "Cancel a reservation." in markdown
