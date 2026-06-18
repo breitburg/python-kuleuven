@@ -2,11 +2,9 @@ import click
 import typer
 from typer.cli import get_docs_for_click
 
-from kuleuven.cli.output import emit
-
 
 def docs() -> None:
-    """Print Markdown docs for every command and subcommand as JSON."""
+    """Print Markdown docs for every command and subcommand."""
     # Imported lazily: kuleuven.cli builds `app` by importing this module.
     from kuleuven.cli import app
 
@@ -18,4 +16,6 @@ def docs() -> None:
     root = typer.main.get_command(app)
     context = click.Context(root, info_name="kuleuven")
     markdown = get_docs_for_click(obj=root, ctx=context, name="kuleuven")
-    emit({"status": "ok", "format": "markdown", "docs": markdown.strip()})
+    # Unlike every other command, this one prints raw Markdown to stdout instead
+    # of a JSON line: it is meant to be read or piped into a docs file, not parsed.
+    print(markdown.strip())

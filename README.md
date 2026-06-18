@@ -86,18 +86,17 @@ Prints Markdown documentation for the whole command tree — every command and s
 kuleuven docs
 ```
 
-The Markdown is returned as a string under the `docs` key (the command still emits a single JSON object, per the contract). `format` is always `markdown`. Exits `0`.
+Unlike every other command, `docs` prints raw Markdown to stdout rather than a JSON line — it is meant to be read or piped into a file, not parsed. Exits `0`.
 
 ```sh
-kuleuven docs | jq -r .docs
+kuleuven docs > COMMANDS.md
 ```
 
-```json
-{
-  "status": "ok",
-  "format": "markdown",
-  "docs": "# `kuleuven`\n\nKU Leuven CLI\n..."
-}
+```text
+# `kuleuven`
+
+KU Leuven CLI
+...
 ```
 
 ### Session
