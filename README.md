@@ -494,7 +494,13 @@ courses = toledo.list_portal_courses()
 course = ToledoClient.resolve(courses, "EX101a")[0]
 ```
 
-From a course's `pk` you can fetch detail (`fetch_ultra_course`, `fetch_portal_detail`), the roster (`fetch_members`, `fetch_member_counts`), announcements (`fetch_announcements`), the schedule (`fetch_schedule`), and grades (`fetch_my_grades`, `fetch_user_grades`).
+Everything else hangs off the course's `pk`, with one `fetch_*` method per CLI command:
+
+```python
+teachers = toledo.fetch_members(course.pk, role_bucket="TEACHING")
+announcements = toledo.fetch_announcements(course.pk)
+grades = toledo.fetch_my_grades(course.pk)
+```
 
 ### Content and files
 
@@ -505,7 +511,17 @@ for node in toledo.walk_contents(course.pk, max_depth=2):
     print("  " * node.depth, node.title)
 ```
 
-For downloads, `discover_files(course_pk)` returns every downloadable as a flat `list[FileItem]`, and `download_file_item(item, dest_path)` fetches one, Kaltura videos included. `stream_file_item` writes to any binary writable, and `resolve_signed_url(item)` produces the same standalone URL as `files resolve`.
+Downloads start from `discover_files(course_pk)`, which returns every downloadable in the course as a flat `list[FileItem]`, Kaltura videos included:
+
+```python
+from pathlib import Path
+
+files = toledo.discover_files(course.pk)
+slides = next(f for f in files if f.filename.endswith(".pdf"))
+toledo.download_file_item(slides, Path(slides.filename))
+```
+
+To write somewhere other than a file, `stream_file_item(item, writable)` streams into any binary writable. `resolve_signed_url(item)` returns the same standalone URL as `files resolve`.
 
 ### KURT
 
