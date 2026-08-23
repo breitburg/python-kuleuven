@@ -6,13 +6,13 @@ See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](doc
 
 ## Installation
 
-Requires Python 3.13 or newer and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.13 or newer and [uv](https://docs.astral.sh/uv/). To install the `kuleuven` command globally:
 
 ```sh
-uv sync
+uv tool install git+https://github.com/breitburg/python-kuleuven
 ```
 
-The `kuleuven` command becomes available inside the project environment. Run it with `uv run kuleuven …` or activate the venv first.
+To work on the project itself, clone it and run `uv sync` instead. The command is then available inside the project environment as `uv run kuleuven …`.
 
 ## Quickstart
 
