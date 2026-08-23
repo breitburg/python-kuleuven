@@ -4,6 +4,20 @@ This guide connects your KU Leuven account to Claude, the AI assistant. Once set
 
 No prior knowledge is needed. You will type a few commands into a terminal, which is a window where you give your computer text instructions. The whole setup takes about 10 minutes, and you only do it once.
 
+## The quick way (macOS and Linux)
+
+One command does the whole setup. Open a terminal (see step 1 below if you don't know how), paste this, and press Enter:
+
+```sh
+curl -LsSf https://raw.githubusercontent.com/breitburg/python-kuleuven/main/docs/install.sh | sh
+```
+
+It installs everything, asks you to sign in with your KU Leuven account, and offers to connect Claude Desktop. Just answer the questions it asks. When it finishes, quit Claude Desktop completely, open it again, and you're done.
+
+If anything goes wrong, copy the output from the terminal and paste it into Claude at [claude.ai](https://claude.ai) (or any AI assistant) and ask what to do. It will walk you through it.
+
+On Windows, or if you'd rather see each step, follow the manual guide below.
+
 ## What you will install
 
 - **uv** — a small helper program that installs and runs the KU Leuven tool for you. It also takes care of Python, the language the tool is written in, so you don't need to install anything else yourself.

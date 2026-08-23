@@ -12,6 +12,12 @@ Requires Python 3.13 or newer and [uv](https://docs.astral.sh/uv/). To install t
 uv tool install git+https://github.com/breitburg/python-kuleuven
 ```
 
+On macOS and Linux, [`docs/install.sh`](docs/install.sh) does the whole setup in one go — uv, the CLI, sign-in, and the Claude Desktop registration:
+
+```sh
+curl -LsSf https://raw.githubusercontent.com/breitburg/python-kuleuven/main/docs/install.sh | sh
+```
+
 To work on the project itself, clone it and run `uv sync` instead. The command is then available inside the project environment as `uv run kuleuven …`.
 
 ## Quickstart
