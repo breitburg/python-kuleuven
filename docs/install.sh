@@ -81,9 +81,10 @@ case "$connect_answer" in
         # MCP server can refresh an expired session on its own (see README,
         # "Claude Desktop"). Opt-in only: it is a plain-text file on disk.
         if [ -n "${KULEUVEN_PASSWORD:-}" ]; then
-            printf '\n%s\n' "Claude can re-sign in by itself when your session expires (about" >"$TTY"
-            printf '%s\n' "every two days). For that, your username and password are stored in" >"$TTY"
-            printf '%s\n' "plain text in Claude Desktop's config file on this computer." >"$TTY"
+            printf '\n%s\n' "Claude can sign in again by itself when your session expires (about" >"$TTY"
+            printf '%s\n' "every two days) -- you would only approve a notification on your phone." >"$TTY"
+            printf '%s\n' "For that, your username and password are stored in plain text in" >"$TTY"
+            printf '%s\n' "Claude Desktop's config file on this computer." >"$TTY"
             printf 'Save them there? [y/N] ' >"$TTY"
             read -r save_answer <"$TTY"
             case "$save_answer" in

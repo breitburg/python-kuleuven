@@ -440,7 +440,7 @@ Registers the server in Claude Desktop's config. Restart Claude Desktop afterwar
 kuleuven mcp install
 ```
 
-If you set `KULEUVEN_USERNAME` and `KULEUVEN_PASSWORD` in the server's `env` block in `claude_desktop_config.json`, Claude can refresh expired sessions on its own.
+If you set `KULEUVEN_USERNAME` and `KULEUVEN_PASSWORD` in the server's `env` block in `claude_desktop_config.json`, Claude can refresh expired sessions on its own — at most you approve the Authenticator push on your phone. The [`docs/install.sh`](docs/install.sh) setup script offers to write this block for you.
 
 #### `kuleuven mcp uninstall`
 

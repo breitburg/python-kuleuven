@@ -97,9 +97,13 @@ or:
 
 The first time, Claude will ask for permission to use the KU Leuven tools. Allow it, and you're done.
 
-## When it stops working
+## When the session expires
 
-Your session expires after about two days. If Claude says it can't reach your courses anymore, open a terminal and sign in again:
+Your session lasts about two days, but Claude handles that on its own.
+
+If you used the quick install and said yes to saving your credentials, there is nothing to do: when the session expires, Claude signs in again by itself. At most you get a notification on your phone in the KU Leuven Authenticator app — approve it and Claude carries on.
+
+If you didn't save your credentials, Claude will say it can't reach your courses. Open a terminal and sign in again:
 
 ```sh
 kuleuven session start
