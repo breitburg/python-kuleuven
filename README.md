@@ -1,6 +1,6 @@
 # python-kuleuven
 
-Gives AI agents access to KU Leuven. An agent that can run this CLI — or talk to its MCP server — can list your Toledo courses, read course content and announcements, download files, follow discussions, and book KURT study spaces on your behalf.
+Gives AI agents access to KU Leuven. An agent that can run this CLI, or talk to its MCP server, can list your Toledo courses, read course content and announcements, download files, follow discussions, and book KURT study spaces on your behalf.
 
 The interface is built for machine consumption: every command prints exactly one JSON object to stdout, errors included, and `kuleuven docs` emits the full command reference so an agent can learn the surface in a single call. It works just as well for humans and shell scripts, and a Python client exposes the same functionality as a library.
 
@@ -18,13 +18,13 @@ The `kuleuven` command becomes available inside the project environment. Run it 
 
 ## Quickstart
 
-Sign in once; credentials can also come from `$KULEUVEN_USERNAME` / `$KULEUVEN_PASSWORD` or a `.env` file:
+Sign in once. Credentials can also come from `$KULEUVEN_USERNAME` / `$KULEUVEN_PASSWORD` or a `.env` file:
 
 ```sh
 kuleuven session start
 ```
 
-Then use any command; the JSON output pipes straight into `jq`:
+Then use any command. The JSON output pipes straight into `jq`:
 
 ```sh
 kuleuven toledo courses list --type course | jq '.items[].course_code'
@@ -40,20 +40,20 @@ kuleuven toledo courses files sync EX101a --into ./downloads --skip-videos
 
 Commands exit `0` on success, `1` on auth or HTTP failure, and `2` on bad input (unknown reference, ambiguous match, missing argument). Errors are JSON on stdout too, so a pipeline only parses one stream.
 
-Course commands take a `<ref>` that accepts any identifier of the course — the course code (`EX101a`, case-insensitive), the batchUid (`ULTRA-B-KUL-EX101a-2526`), the Blackboard pk (`_100000_1`), or either UUID. If a code matches several academic years, the command exits `2` and lists the candidates.
+Course commands take a `<ref>` that accepts any identifier of the course: the course code (`EX101a`, case-insensitive), the batchUid (`ULTRA-B-KUL-EX101a-2526`), the Blackboard pk (`_100000_1`), or either UUID. If a code matches several academic years, the command exits `2` and lists the candidates.
 
-Credentials are read from flags, these environment variables, or a `.env` file, and prompted for only on a TTY. They are never written to disk; the only thing persisted is the session cookie jar at `platformdirs.user_data_path("kuleuven") / "cookies.json"` with `0600` permissions.
+Credentials are read from flags, these environment variables, or a `.env` file, and prompted for only on a TTY. They are never written to disk. The only thing persisted is the session cookie jar at `platformdirs.user_data_path("kuleuven") / "cookies.json"` with `0600` permissions.
 
-- `KULEUVEN_USERNAME` — r-uid or q-uid
-- `KULEUVEN_PASSWORD` — account password
-- `KULEUVEN_TOTP` — 6-digit code, for TOTP-enrolled accounts
-- `KULEUVEN_AUTH_DEVICE` — Authenticator device to push to: a name, 1-based index, or `most-recent`
+- `KULEUVEN_USERNAME`: r-uid or q-uid
+- `KULEUVEN_PASSWORD`: account password
+- `KULEUVEN_TOTP`: 6-digit code, for TOTP-enrolled accounts
+- `KULEUVEN_AUTH_DEVICE`: the Authenticator device to push to, as a name, a 1-based index, or `most-recent`
 
 ## CLI
 
 ### `kuleuven docs`
 
-Prints Markdown documentation for the whole command tree — every command with usage, arguments, and options — generated from the live CLI. Unlike every other command it prints raw Markdown, meant to be read or piped to a file:
+Prints Markdown documentation for the whole command tree, generated from the live CLI, with the usage, arguments, and options of every command. Unlike every other command it prints raw Markdown, meant to be read or piped to a file:
 
 ```sh
 kuleuven docs > COMMANDS.md
@@ -102,7 +102,7 @@ Deletes the saved session:
 kuleuven session end
 ```
 
-Idempotent — `removed` is `false` if there was nothing to delete.
+Idempotent: `removed` is `false` if there was nothing to delete.
 
 #### `kuleuven session raw`
 
@@ -126,7 +126,7 @@ The response comes back wrapped, with the status code, final URL, headers, and p
 }
 ```
 
-Pass `--body` to send a JSON body; query parameters belong in the URL. Non-2xx responses are returned the same way, not treated as errors.
+Pass `--body` to send a JSON body. Query parameters belong in the URL. Non-2xx responses are returned the same way, not treated as errors.
 
 ### Toledo
 
@@ -134,7 +134,7 @@ Toledo commands live under `kuleuven toledo courses`, with `content`, `files`, a
 
 #### `kuleuven toledo courses list`
 
-Lists your courses and communities. Filter with `--favorite`, `--type course|community`, `--semester`, or `--year 2526`; add `--all` to include archived and hidden enrollments.
+Lists your courses and communities. Filter with `--favorite`, `--type course|community`, `--semester`, or `--year 2526`. Add `--all` to include archived and hidden enrollments.
 
 ```sh
 kuleuven toledo courses list --type course
@@ -178,7 +178,7 @@ Pins a course on the portal dashboard, or unpins it with `--off`:
 kuleuven toledo courses favorite EX101a
 ```
 
-Only portal-visible courses can be favourited; an Ultra-only course exits `2` with `code: "not_in_portal"`.
+Only portal-visible courses can be favourited. An Ultra-only course exits `2` with `code: "not_in_portal"`.
 
 #### `kuleuven toledo courses members`
 
@@ -192,7 +192,7 @@ Each item has the person's q-uid, name, and email, plus the raw role codes from 
 
 #### `kuleuven toledo courses announcements`
 
-Lists announcements, with bodies rendered to markdown. `--unread` keeps only what you haven't read; `--limit` caps the fetch (default 100):
+Lists announcements, with bodies rendered to markdown. `--unread` keeps only what you haven't read, and `--limit` caps the fetch (default 100):
 
 ```sh
 kuleuven toledo courses announcements EX101a --unread
@@ -208,11 +208,11 @@ Returns the course's own calendar items, optionally windowed with `--from` and `
 kuleuven toledo courses schedule EX101a
 ```
 
-In practice this endpoint is sparsely populated — for "what's next" use `session raw GET …/portal/api/upcoming` instead.
+In practice this endpoint is sparsely populated. For "what's next", use `session raw GET …/portal/api/upcoming` instead.
 
 #### `kuleuven toledo courses grades`
 
-Lists your per-item grades in a course; instructors can pass `--user` with a Blackboard user pk to query a student:
+Lists your per-item grades in a course. Instructors can pass `--user` with a Blackboard user pk to query a student:
 
 ```sh
 kuleuven toledo courses grades EX102a
@@ -222,7 +222,7 @@ Each item is a gradebook record with `displayGrade`, `submissionStatus`, attempt
 
 #### `kuleuven toledo courses content tree`
 
-Walks the content tree and emits every node in pre-order; `--depth N` bounds the recursion:
+Walks the content tree and emits every node in pre-order, and `--depth N` bounds the recursion:
 
 ```sh
 kuleuven toledo courses content tree EX101a --depth 1
@@ -241,7 +241,7 @@ Each node carries its id, parent, title, and handler:
 }
 ```
 
-Items with `is_bb_page: true` are Ultra Documents — pages, not folders. The tree treats them as leaves; `content show` reads their body for you.
+Items with `is_bb_page: true` are Ultra Documents, which are pages rather than folders. The tree treats them as leaves, and `content show` reads their body for you.
 
 #### `kuleuven toledo courses content show`
 
@@ -255,7 +255,7 @@ The `embeds` array lists each attachment or LTI launch found in the body, with i
 
 #### `kuleuven toledo courses content embeds`
 
-Lists just the embeds of one item — handy when you don't need the body:
+Lists just the embeds of one item, handy when you don't need the body:
 
 ```sh
 kuleuven toledo courses content embeds EX101a _10002_1
@@ -265,7 +265,7 @@ Each embed has a `kind` (`file` or `lti`), a `title`, a `url`, and the full raw 
 
 #### `kuleuven toledo courses files list`
 
-Lists every downloadable in the course as one flat list — file leaves in the tree, attachments embedded in document bodies, and Kaltura videos:
+Lists every downloadable in the course as one flat list, covering file leaves in the tree, attachments embedded in document bodies, and Kaltura videos:
 
 ```sh
 kuleuven toledo courses files list EX101a
@@ -275,7 +275,7 @@ Each item has a synthetic `id` to pass to `fetch` or `resolve` (`<content_pk>@<i
 
 #### `kuleuven toledo courses files fetch`
 
-Downloads one file or video by its id. `--out` takes a file path, an existing directory, or `-` to stream raw bytes to stdout; omitted, it writes to the current directory under the file's own name:
+Downloads one file or video by its id. `--out` takes a file path, an existing directory, or `-` to stream raw bytes to stdout. When omitted, the file is written to the current directory under its own name:
 
 ```sh
 kuleuven toledo courses files fetch EX101a '_10002_1@0' --out lecture-1.pdf
@@ -289,7 +289,7 @@ kuleuven toledo courses files fetch EX101a '_10100_1' --out - > lecture-1.mp4
 
 #### `kuleuven toledo courses files resolve`
 
-Resolves a short-lived URL that any HTTP client can fetch without authentication — useful for handing a download to another tool:
+Resolves a short-lived URL that any HTTP client can fetch without authentication, useful for handing a download to another tool:
 
 ```sh
 kuleuven toledo courses files resolve EX101a '_10000_1@0'
@@ -305,7 +305,7 @@ Downloads every file and video in a course, mirroring the folder structure on di
 kuleuven toledo courses files sync EX101a --into ./downloads --skip-videos
 ```
 
-Already-existing files are kept, and per-item failures land in a `failures` array instead of aborting the run — `status` becomes `"partial"` when some items failed.
+Already-existing files are kept, and per-item failures land in a `failures` array instead of aborting the run, and `status` becomes `"partial"` when some items failed.
 
 #### `kuleuven toledo courses discussions list`
 
@@ -337,7 +337,7 @@ Follow `next_page` in the response while more remain.
 
 ### KURT
 
-The `kuleuven kurt` commands book study seats, group rooms, and equipment. Dates are `YYYY-MM-DD` and times are `HH:MM` on the hour; a new day becomes bookable each evening one week out.
+The `kuleuven kurt` commands book study seats, group rooms, and equipment. Dates are `YYYY-MM-DD` and times are `HH:MM` on the hour. A new day becomes bookable each evening one week out.
 
 #### `kuleuven kurt locations list`
 
@@ -361,7 +361,7 @@ The resource type ids listed here feed into `resources search`.
 
 #### `kuleuven kurt resources search`
 
-Searches what's bookable at a location for a window. `--location`, `--type`, and `--date` are required; narrow with `--start`/`--end`, `--zone`, `--participants`, `--name`, or `--only-favorites`. Leave the times blank to see every resource regardless of availability:
+Searches what's bookable at a location for a window. `--location`, `--type`, and `--date` are required. Narrow with `--start`/`--end`, `--zone`, `--participants`, `--name`, or `--only-favorites`. Leave the times blank to see every resource regardless of availability:
 
 ```sh
 kuleuven kurt resources search --location 10 --type 302 --date 2026-05-25 --start 09:00 --end 12:00
@@ -389,7 +389,7 @@ kuleuven kurt resources favorites
 
 #### `kuleuven kurt resources reservations`
 
-Lists your current and future reservations; `--today` keeps only those whose window includes today:
+Lists your current and future reservations, and `--today` keeps only those whose window includes today:
 
 ```sh
 kuleuven kurt resources reservations
@@ -423,11 +423,11 @@ kuleuven kurt resources unbook 3963083203
 
 ### Claude Desktop
 
-The `kuleuven mcp` commands expose the CLI as an MCP server. The tools mirror the CLI verbs one-for-one — `kuleuven_toledo_courses_list`, `kuleuven_kurt_resources_search`, and so on — with the same arguments, JSON output, and cookie jar. Sign in once with `kuleuven session start` in a terminal and Claude Desktop reuses the session.
+The `kuleuven mcp` commands expose the CLI as an MCP server. The tools mirror the CLI verbs one-for-one (`kuleuven_toledo_courses_list`, `kuleuven_kurt_resources_search`, and so on) with the same arguments, JSON output, and cookie jar. Sign in once with `kuleuven session start` in a terminal and Claude Desktop reuses the session.
 
 #### `kuleuven mcp install`
 
-Registers the server in Claude Desktop's config; restart Claude Desktop afterwards. Use `--name` to register more than one instance:
+Registers the server in Claude Desktop's config. Restart Claude Desktop afterwards. Use `--name` to register more than one instance:
 
 ```sh
 kuleuven mcp install
@@ -445,24 +445,24 @@ kuleuven mcp uninstall
 
 #### `kuleuven mcp start`
 
-The stdio server itself — invoked by Claude Desktop, not by humans:
+The stdio server itself, invoked by Claude Desktop rather than by humans:
 
 ```sh
 kuleuven mcp start
 ```
 
-It exposes every CLI command except the disk-writing ones (`files fetch`, `files sync`); Claude gets `files resolve` instead.
+It exposes every CLI command except the disk-writing ones (`files fetch`, `files sync`). Claude gets `files resolve` instead.
 
 ## Python API
 
-The library is pure: HTTP in, Pydantic models out — no disk I/O, no environment reads, no prompting. `KuleuvenSession` owns the `httpx.Client` and the sign-in; `ToledoClient` and `KurtClient` are built from it and share its cookies.
+The library is pure: HTTP in, Pydantic models out, with no disk I/O, environment reads, or prompting. `KuleuvenSession` owns the `httpx.Client` and the sign-in. `ToledoClient` and `KurtClient` are built from it and share its cookies.
 
 ```python
 from kuleuven import KuleuvenSession, ToledoClient, KurtClient
 
 class Authenticator:
     # Satisfies the AuthenticationProvider protocol. Each method is called only
-    # if the IdP demands it: provide_totp for a TOTP form; select_device +
+    # if the IdP demands it: provide_totp for a TOTP form, select_device and
     # awaiting_approval for the KU Leuven Authenticator push.
     def provide_totp(self):
         return "123456"
@@ -482,11 +482,11 @@ with KuleuvenSession() as session:
     reservations = kurt.list_reservations()
 ```
 
-The library does not persist cookies — that lives in the CLI. To reuse a saved session in your own code, build an `httpx.Client` with the cookies loaded yourself and pass it as `KuleuvenSession(http_client=...)`. Check `session.session_info()` to see whether it still works.
+The library does not persist cookies. That part lives in the CLI. To reuse a saved session in your own code, build an `httpx.Client` with the cookies loaded yourself and pass it as `KuleuvenSession(http_client=...)`. Check `session.session_info()` to see whether it still works.
 
 ### Working with courses
 
-`ToledoClient` covers the portal and Ultra. `list_portal_courses()` returns your dashboard courses; `list_ultra_courses()` returns everything Blackboard knows about, archived included. `ToledoClient.resolve(courses, ref)` matches any identifier form against a course list, the same way the CLI does:
+`ToledoClient` covers the portal and Ultra. `list_portal_courses()` returns your dashboard courses, and `list_ultra_courses()` returns everything Blackboard knows about, archived included. `ToledoClient.resolve(courses, ref)` matches any identifier form against a course list, the same way the CLI does:
 
 ```python
 courses = toledo.list_portal_courses()
@@ -504,11 +504,11 @@ for node in toledo.walk_contents(course.pk, max_depth=2):
     print("  " * node.depth, node.title)
 ```
 
-For downloads, `discover_files(course_pk)` returns every downloadable as a flat `list[FileItem]`, and `download_file_item(item, dest_path)` fetches one — Kaltura videos included. `stream_file_item` writes to any binary writable, and `resolve_signed_url(item)` produces the same standalone URL as `files resolve`.
+For downloads, `discover_files(course_pk)` returns every downloadable as a flat `list[FileItem]`, and `download_file_item(item, dest_path)` fetches one, Kaltura videos included. `stream_file_item` writes to any binary writable, and `resolve_signed_url(item)` produces the same standalone URL as `files resolve`.
 
 ### KURT
 
-`KurtClient` mirrors the KURT commands: `list_tiles()`, `get_location(id)`, `list_resource_types(id)`, and `get_occupancy(id)` for browsing; `search_availability(...)` with the same parameters the CLI exposes; `list_reservations()`, `create_reservation(...)`, `update_reservation(...)`, and `cancel_reservation(id)` for booking; `get_account()` for your quotas.
+`KurtClient` mirrors the KURT commands. Browse with `list_tiles()`, `get_location(id)`, `list_resource_types(id)`, and `get_occupancy(id)`, then call `search_availability(...)` with the same parameters the CLI exposes. Booking goes through `list_reservations()`, `create_reservation(...)`, `update_reservation(...)`, and `cancel_reservation(id)`, and `get_account()` reports your quotas.
 
 ```python
 slots = kurt.search_availability(location_id=10, resource_type_id=302, date="2026-05-25")
@@ -518,22 +518,22 @@ One quirk: `create_reservation` needs `resource_name` to echo the resource's `na
 
 ### Models
 
-Responses are Pydantic models in `kuleuven.models`; call `.model_dump(mode="json")` to get the same shape the CLI prints. Curated models like `Course`, `Person`, and `FileItem` use snake_case fields; API-echo models like `Reservation` and `Location` mirror the upstream JSON verbatim. Role values and content handlers come through raw, untranslated.
+Responses are Pydantic models in `kuleuven.models`. Call `.model_dump(mode="json")` to get the same shape the CLI prints. Curated models like `Course`, `Person`, and `FileItem` use snake_case fields, while API-echo models like `Reservation` and `Location` mirror the upstream JSON verbatim. Role values and content handlers come through raw, untranslated.
 
 ### Exceptions
 
 Auth failures raise `kuleuven.AuthenticationError` or one of its subclasses:
 
-- `InvalidCredentialsError` — the IdP rejected the username or password
-- `AuthApprovalTimeoutError` — the Authenticator push wasn't approved within 120 s
-- `AuthApprovalFailedError` — the push was rejected or the WebSocket errored
-- `SessionExpiredError` — an API call hit a re-auth bounce; sign in again
+- `InvalidCredentialsError`: the IdP rejected the username or password
+- `AuthApprovalTimeoutError`: the Authenticator push wasn't approved within 120 s
+- `AuthApprovalFailedError`: the push was rejected or the WebSocket errored
+- `SessionExpiredError`: an API call hit a re-auth bounce, so sign in again
 
 `httpx.HTTPError` from the HTTP layer is propagated, not wrapped.
 
 ## Tests
 
-The suite is offline — HTTP is mocked at the transport layer with [respx](https://lundberg.github.io/respx/), and CLI tests redirect the cookie jar to a temp path, so nothing touches the live hosts or your saved session:
+The suite is offline. HTTP is mocked at the transport layer with [respx](https://lundberg.github.io/respx/), and CLI tests redirect the cookie jar to a temp path, so nothing touches the live hosts or your saved session:
 
 ```sh
 uv run pytest
