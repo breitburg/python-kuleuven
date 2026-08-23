@@ -509,13 +509,32 @@ For downloads, `discover_files(course_pk)` returns every downloadable as a flat 
 
 ### KURT
 
-`KurtClient` mirrors the KURT commands. Browse with `list_tiles()`, `get_location(id)`, `list_resource_types(id)`, and `get_occupancy(id)`, then call `search_availability(...)` with the same parameters the CLI exposes. Booking goes through `list_reservations()`, `create_reservation(...)`, `update_reservation(...)`, and `cancel_reservation(id)`, and `get_account()` reports your quotas.
+`KurtClient` mirrors the KURT commands. Find a location and resource type with `list_tiles()`, `get_location(id)`, and `list_resource_types(id)`, then search for a free slot and book it:
 
 ```python
-slots = kurt.search_availability(location_id=10, resource_type_id=302, date="2026-05-25")
+result = kurt.search_availability(
+    location_id=10,
+    resource_type_id=302,
+    start_date="2026-05-25",
+    end_date="2026-05-25",
+    start_time="09:00",
+    end_time="12:00",
+)
+seat = result.availabilities[0]
+
+kurt.create_reservation(
+    resource_id=seat.resource_id,
+    resource_name=seat.resource_name,
+    start_date="2026-05-25",
+    end_date="2026-05-25",
+    start_time="09:00",
+    end_time="12:00",
+)
 ```
 
-One quirk: `create_reservation` needs `resource_name` to echo the resource's `name` field exactly, or KURT rejects the request with a bare 400.
+Passing `resource_name` is not optional. KURT rejects the request with a bare 400 unless it echoes the resource's name exactly, which is why the example takes it from the search result.
+
+Manage what you booked with `list_reservations()`, `update_reservation(...)`, and `cancel_reservation(id)`, and check your booking limits with `get_account()`.
 
 ### Models
 
