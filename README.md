@@ -1,8 +1,10 @@
 # python-kuleuven
 
-CLI, MCP server, and Python client for KU Leuven. Signs in through the SAML2 SSO flow at `idp.kuleuven.be` and gives you one session that works against the Toledo portal, Blackboard Ultra, and the KURT study-space reservation system.
+Gives AI agents access to KU Leuven. An agent that can run this CLI — or talk to its MCP server — can list your Toledo courses, read course content and announcements, download files, follow discussions, and book KURT study spaces on your behalf.
 
-See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface.
+The interface is built for machine consumption: every command prints exactly one JSON object to stdout, errors included, and `kuleuven docs` emits the full command reference so an agent can learn the surface in a single call. It works just as well for humans and shell scripts, and a Python client exposes the same functionality as a library.
+
+Under the hood, it signs in through the SAML2 SSO flow at `idp.kuleuven.be` and holds one session across the Toledo portal, Blackboard Ultra, and KURT. See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface.
 
 ## Installation
 
@@ -22,7 +24,7 @@ Sign in once; credentials can also come from `$KULEUVEN_USERNAME` / `$KULEUVEN_P
 kuleuven session start
 ```
 
-Then use any command. Every one prints a single JSON object to stdout, so the output pipes straight into `jq`:
+Then use any command; the JSON output pipes straight into `jq`:
 
 ```sh
 kuleuven toledo courses list --type course | jq '.items[].course_code'
