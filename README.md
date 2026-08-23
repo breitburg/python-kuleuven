@@ -2,7 +2,7 @@
 
 CLI, MCP server, and Python client for KU Leuven. Signs in through the SAML2 SSO flow at `idp.kuleuven.be` and gives you one session that works against the Toledo portal, Blackboard Ultra, and the KURT study-space reservation system.
 
-See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface. New to the command line? [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) walks through the Claude Desktop setup from zero.
+See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface. New to the command line? [`docs/index.md`](docs/index.md) walks through the Claude Desktop setup from zero.
 
 ## Installation
 
@@ -424,7 +424,7 @@ kuleuven kurt resources unbook 3963083203
 
 ### Claude Desktop
 
-The `kuleuven mcp` commands expose the CLI as an MCP server. The tools mirror the CLI verbs one-for-one (`kuleuven_toledo_courses_list`, `kuleuven_kurt_resources_search`, and so on) with the same arguments, JSON output, and cookie jar. Sign in once with `kuleuven session start` in a terminal and Claude Desktop reuses the session. For a from-scratch walkthrough aimed at non-developers, see [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md).
+The `kuleuven mcp` commands expose the CLI as an MCP server. The tools mirror the CLI verbs one-for-one (`kuleuven_toledo_courses_list`, `kuleuven_kurt_resources_search`, and so on) with the same arguments, JSON output, and cookie jar. Sign in once with `kuleuven session start` in a terminal and Claude Desktop reuses the session. For a from-scratch walkthrough aimed at non-developers, see [`docs/index.md`](docs/index.md).
 
 #### `kuleuven mcp install`
 
