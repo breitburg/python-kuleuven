@@ -46,20 +46,9 @@ kuleuven mcp install
 
 Claude then gets every command as a tool and reuses your signed-in session. See the [Claude Desktop](#claude-desktop) section for details.
 
-## Conventions
-
-Commands exit `0` on success, `1` on auth or HTTP failure, and `2` on bad input (unknown reference, ambiguous match, missing argument). Errors are JSON on stdout too, so a pipeline only parses one stream.
-
-Course commands take a `<ref>` that accepts any identifier of the course: the course code (`EX101a`, case-insensitive), the batchUid (`ULTRA-B-KUL-EX101a-2526`), the Blackboard pk (`_100000_1`), or either UUID. If a code matches several academic years, the command exits `2` and lists the candidates.
-
-Credentials are read from flags, these environment variables, or a `.env` file, and prompted for only on a TTY. They are never written to disk. The only thing persisted is the session cookie jar at `platformdirs.user_data_path("kuleuven") / "cookies.json"` with `0600` permissions.
-
-- `KULEUVEN_USERNAME`: r-uid or q-uid
-- `KULEUVEN_PASSWORD`: account password
-- `KULEUVEN_TOTP`: 6-digit code, for TOTP-enrolled accounts
-- `KULEUVEN_AUTH_DEVICE`: the Authenticator device to push to, as a name, a 1-based index, or `most-recent`
-
 ## CLI
+
+Every command exits `0` on success, `1` on auth or HTTP failure, and `2` on bad input. Errors are printed as JSON on stdout too, so a pipeline only parses one stream.
 
 ### `kuleuven docs`
 
@@ -73,7 +62,9 @@ kuleuven docs > COMMANDS.md
 
 #### `kuleuven session start`
 
-Signs in to the portal, Ultra, and KURT and saves the cookies. The second factor depends on your account: TOTP accounts pass `--totp` (or get prompted), accounts on the KU Leuven Authenticator app get a push sent to the device chosen with `--device` and the command waits up to 120 seconds for approval.
+Signs in to the portal, Ultra, and KURT and saves the cookies. Credentials come from `--username` and `--password`, the matching `KULEUVEN_*` environment variables (`KULEUVEN_USERNAME`, `KULEUVEN_PASSWORD`, `KULEUVEN_TOTP`, `KULEUVEN_AUTH_DEVICE`), or a `.env` file, and are prompted for only on a TTY.
+
+The second factor depends on your account: TOTP accounts pass `--totp` (or get prompted), accounts on the KU Leuven Authenticator app get a push sent to the device chosen with `--device` and the command waits up to 120 seconds for approval.
 
 ```sh
 kuleuven session start --device "My phone"
@@ -92,7 +83,7 @@ On success it prints your session attributes and expiry:
 }
 ```
 
-The IdP remembers your device, so 2FA only happens once per machine.
+The IdP remembers your device, so 2FA only happens once per machine. Credentials are never written to disk. The only thing saved is the session cookie jar, at `platformdirs.user_data_path("kuleuven") / "cookies.json"` with `0600` permissions.
 
 #### `kuleuven session status`
 
@@ -140,7 +131,7 @@ Pass `--body` to send a JSON body. Query parameters belong in the URL. Non-2xx r
 
 ### Toledo
 
-Toledo commands live under `kuleuven toledo courses`, with `content`, `files`, and `discussions` nested per course.
+Toledo commands live under `kuleuven toledo courses`, with `content`, `files`, and `discussions` nested per course. The `<ref>` argument takes any identifier of a course, most conveniently the case-insensitive course code like `EX101a`. The batchUid, Blackboard pk, and UUIDs work too, and when a code matches several academic years the command exits `2` and lists the candidates.
 
 #### `kuleuven toledo courses list`
 
