@@ -1,10 +1,8 @@
 # python-kuleuven
 
-Gives AI agents access to KU Leuven. An agent that can run this CLI, or talk to its MCP server, can list your Toledo courses, read course content and announcements, download files, follow discussions, and book KURT study spaces on your behalf.
+CLI, MCP server, and Python client for KU Leuven. Signs in through the SAML2 SSO flow at `idp.kuleuven.be` and gives you one session that works against the Toledo portal, Blackboard Ultra, and the KURT study-space reservation system.
 
-The interface is built for machine consumption: every command prints exactly one JSON object to stdout, errors included, and `kuleuven docs` emits the full command reference so an agent can learn the surface in a single call. It works just as well for humans and shell scripts, and a Python client exposes the same functionality as a library.
-
-Under the hood, it signs in through the SAML2 SSO flow at `idp.kuleuven.be` and holds one session across the Toledo portal, Blackboard Ultra, and KURT. See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface.
+See [`docs/AUTH.md`](docs/AUTH.md) for the sign-in flow and [`docs/DATA.md`](docs/DATA.md) for the REST surface.
 
 ## Installation
 
@@ -35,6 +33,18 @@ To pull all the files of a course onto disk:
 ```sh
 kuleuven toledo courses files sync EX101a --into ./downloads --skip-videos
 ```
+
+### AI agents
+
+The interface is built for agents. Every command prints exactly one JSON object to stdout, errors included, and `kuleuven docs` emits the full command reference so an agent can learn the whole surface in a single call.
+
+To let Claude book your study spaces and read your courses, register the MCP server and restart Claude Desktop:
+
+```sh
+kuleuven mcp install
+```
+
+Claude then gets every command as a tool and reuses your signed-in session. See the [Claude Desktop](#claude-desktop) section for details.
 
 ## Conventions
 
