@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from io import BytesIO
 
 import pytest
@@ -141,6 +142,7 @@ class TestCoursesEndpoints:
         assert isinstance(anns[0], Announcement)
         assert anns[0].title == "Welcome"
         assert anns[0].body_html == "<p>Hello world</p>"
+        assert anns[0].created_date == datetime(2026, 1, 10, tzinfo=UTC)
 
     def test_fetch_announcement_counts(self, toledo, respx_mock):
         respx_mock.get(f"{ULTRA_API}/courses/_pk_1/announcements/counts").respond(
@@ -158,6 +160,19 @@ class TestCoursesEndpoints:
         toledo.fetch_schedule("_pk_1")
         params = dict(route.calls[0].request.url.params)
         assert params == {"sort": "location(desc)"}
+
+    def test_fetch_schedule_sends_iso_window(self, toledo, respx_mock):
+        route = respx_mock.get(f"{ULTRA_API}/courses/_pk_1/schedule").respond(
+            json={"results": []}
+        )
+        toledo.fetch_schedule(
+            "_pk_1",
+            start=datetime(2026, 5, 25, tzinfo=UTC),
+            end=datetime(2026, 6, 1, 9, 30, tzinfo=UTC),
+        )
+        params = dict(route.calls[0].request.url.params)
+        assert params["startTime"] == "2026-05-25T00:00:00+00:00"
+        assert params["endTime"] == "2026-06-01T09:30:00+00:00"
 
     def test_fetch_user_grades(self, toledo, respx_mock):
         route = respx_mock.get(f"{ULTRA_API}/courses/_pk_1/gradebook/grades").respond(
@@ -207,6 +222,8 @@ class TestDiscussionsEndpoints:
                         "id": "_forum_1",
                         "title": "Forum",
                         "contentHandler": "resource/x-bb-forumlink",
+                        "modifiedDate": "2026-05-01T00:00:00Z",
+                        "genericReadOnlyData": {"dueDate": "2026-05-22T23:59:00Z"},
                     },
                     {
                         # Non-forum item gets filtered out
@@ -220,6 +237,10 @@ class TestDiscussionsEndpoints:
         items = toledo.list_discussions("_pk_1")
         assert len(items) == 1
         assert items[0].model_dump(mode="json")["id"] == "_forum_1"
+        assert items[0].modified_date == datetime(2026, 5, 1, tzinfo=UTC)
+        assert items[0].generic_read_only_data.due_date == datetime(
+            2026, 5, 22, 23, 59, tzinfo=UTC
+        )
 
     def test_list_message_replies_returns_envelope(self, toledo, respx_mock):
         respx_mock.get(

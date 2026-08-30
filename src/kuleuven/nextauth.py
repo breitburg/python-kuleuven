@@ -1,6 +1,8 @@
 import re
 import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from html import unescape
 
 import httpx
@@ -25,7 +27,7 @@ IDP_ORIGIN = "https://idp.kuleuven.be"
 class NextauthDevice:
     account_id: str
     name: str
-    last_login: str | None
+    last_login: datetime | None
 
 
 @dataclass(frozen=True)
@@ -56,7 +58,9 @@ def parse_device_picker(html: str) -> tuple[str, list[NextauthDevice]] | None:
                 break
             text = sibling.get_text(" ", strip=True)
             if "Last login at:" in text:
-                last_login = text.split("Last login at:", 1)[1].strip() or None
+                last_login = _parse_last_login(
+                    text.split("Last login at:", 1)[1].strip()
+                )
                 break
         devices.append(
             NextauthDevice(
@@ -69,6 +73,23 @@ def parse_device_picker(html: str) -> tuple[str, list[NextauthDevice]] | None:
     if not devices:
         return None
     return form.get("action", ""), devices
+
+
+def _parse_last_login(value: str) -> datetime | None:
+    # The IdP prints an RFC 2822 date ("Wed, 1 Jan 2025 00:00:00 GMT"). An
+    # unparseable one means the page format changed: fail loudly rather than
+    # drop the timestamp and silently mis-rank the most recent device.
+    if not value:
+        return None
+    try:
+        parsed = parsedate_to_datetime(value)
+    except (TypeError, ValueError) as error:
+        raise AuthenticationError(
+            f"could not parse device last-login time {value!r}"
+        ) from error
+    # Always tz-aware, so callers can sort devices without comparing a naive
+    # datetime against an aware one.
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
 # The device-picker page wires the WebSocket in its <body onload> via

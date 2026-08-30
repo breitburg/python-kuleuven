@@ -1,3 +1,5 @@
+from datetime import date, time
+
 import pytest
 
 from kuleuven.exceptions import SessionExpiredError
@@ -109,14 +111,20 @@ class TestKurtReadEndpoints:
         result = kurt.search_availability(
             location_id=5,
             resource_type_id=302,
-            start_date="2026-05-26",
-            end_date="2026-05-26",
+            start_date=date(2026, 5, 26),
+            end_date=date(2026, 5, 26),
+            start_time=time(10, 0),
             only_favorites=True,
         )
         assert isinstance(result, AvailabilitySearchResult)
         params = dict(route.calls[0].request.url.params)
         assert params["onlyFavorites"] == "true"
         assert params["exactMatch"] == "true"
+        # KURT's own formats: dates as YYYY-MM-DD, times as HH:MM, and an
+        # empty string for the time it was not given.
+        assert params["startDate"] == "2026-05-26"
+        assert params["startTime"] == "10:00"
+        assert params["endTime"] == ""
 
 
 class TestKurtReservations:
@@ -148,10 +156,10 @@ class TestKurtReservations:
         result = kurt.create_reservation(
             resource_id=7,
             resource_name="Group Room A",
-            start_date="2026-05-26",
-            end_date="2026-05-26",
-            start_time="10:00",
-            end_time="12:00",
+            start_date=date(2026, 5, 26),
+            end_date=date(2026, 5, 26),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
             participants=[{"uid": "r1", "email": "a@b.c"}],
         )
         assert isinstance(result, ReservationOrText)
@@ -162,6 +170,8 @@ class TestKurtReservations:
         import json
         body = json.loads(route.calls[0].request.content)
         assert body["resourceName"] == "Group Room A"
+        assert body["startDate"] == "2026-05-26"
+        assert body["startTime"] == "10:00"
 
     def test_create_reservation_text_fallback(self, kurt, respx_mock):
         respx_mock.post(f"{API_BASE}/reservations/").respond(
@@ -171,10 +181,10 @@ class TestKurtReservations:
         result = kurt.create_reservation(
             resource_id=7,
             resource_name="X",
-            start_date="2026-05-26",
-            end_date="2026-05-26",
-            start_time="10:00",
-            end_time="12:00",
+            start_date=date(2026, 5, 26),
+            end_date=date(2026, 5, 26),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
         )
         assert result.reservation is None
         assert result.message == "Resource not available"
@@ -194,6 +204,10 @@ class TestKurtReservations:
         body = json.loads(route.calls[0].request.content)
         assert body["subject"] == "Updated"
         assert body["resourceId"] == 7
+        # The window has to survive the round trip in KURT's wire format, not
+        # as the date/time objects the model holds.
+        assert body["startDate"] == "2026-05-26"
+        assert body["endTime"] == "12:00"
 
     def test_cancel_reservation(self, kurt, respx_mock):
         route = respx_mock.delete(f"{API_BASE}/reservations/42").respond(status_code=200)

@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Iterator
@@ -150,14 +151,14 @@ class ToledoClient:
         self,
         course_pk: str,
         *,
-        start: str | None = None,
-        end: str | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
     ) -> list[ScheduleItem]:
         params: dict = {"sort": "location(desc)"}
         if start is not None:
-            params["startTime"] = start
+            params["startTime"] = start.isoformat()
         if end is not None:
-            params["endTime"] = end
+            params["endTime"] = end.isoformat()
         response = self.http_client.get(
             f"{ULTRA_API}/courses/{course_pk}/schedule", params=params
         )

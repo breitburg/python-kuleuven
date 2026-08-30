@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Callable, Protocol
 
 import httpx
@@ -78,11 +79,23 @@ def parse_session_summary(html: str) -> dict | None:
         digits = "".join(character for character in expiration_raw if character.isdigit())
         if digits:
             result["expires_in_minutes"] = int(digits)
-    if "Authentication Time" in miscellaneous:
-        result["authenticated_at"] = miscellaneous["Authentication Time"]
+    authenticated_at = _parse_timestamp(miscellaneous.get("Authentication Time"))
+    if authenticated_at is not None:
+        result["authenticated_at"] = authenticated_at
     if "Authentication Context Class" in miscellaneous:
         result["authentication_context_class"] = miscellaneous["Authentication Context Class"]
     return result
+
+
+def _parse_timestamp(value: str | None) -> datetime | None:
+    # The SP prints an ISO 8601 instant ("2026-05-26T12:28:29Z"). Drop the key
+    # rather than surface a half-parsed string if it ever prints something else.
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 def sign_in_via_saml(

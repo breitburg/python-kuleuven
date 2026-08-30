@@ -1,3 +1,4 @@
+from datetime import date, time
 from typing import Any
 
 import httpx
@@ -74,10 +75,10 @@ class KurtClient:
         self,
         location_id: int,
         resource_type_id: int,
-        start_date: str,
-        end_date: str,
-        start_time: str = "",
-        end_time: str = "",
+        start_date: date,
+        end_date: date,
+        start_time: time | None = None,
+        end_time: time | None = None,
         zone_id: int = -1,
         participant_count: int = 1,
         page_number: int = 0,
@@ -94,10 +95,10 @@ class KurtClient:
                     "zoneId": zone_id,
                     "resourceTypeId": resource_type_id,
                     "pageNumber": page_number,
-                    "startDate": start_date,
-                    "startTime": start_time,
-                    "endDate": end_date,
-                    "endTime": end_time,
+                    "startDate": start_date.isoformat(),
+                    "startTime": _wall_clock(start_time),
+                    "endDate": end_date.isoformat(),
+                    "endTime": _wall_clock(end_time),
                     "participantCount": participant_count,
                     "tagIds": tag_ids,
                     "exactMatch": "true" if exact_match else "false",
@@ -122,10 +123,10 @@ class KurtClient:
         self,
         resource_id: int,
         resource_name: str,
-        start_date: str,
-        end_date: str,
-        start_time: str,
-        end_time: str,
+        start_date: date,
+        end_date: date,
+        start_time: time,
+        end_time: time,
         subject: str = "",
         purpose: str = "",
         participants: list[dict] | None = None,
@@ -138,10 +139,10 @@ class KurtClient:
             "purpose": purpose,
             "resourceId": resource_id,
             "resourceName": resource_name,
-            "startDate": start_date,
-            "startTime": start_time,
-            "endDate": end_date,
-            "endTime": end_time,
+            "startDate": start_date.isoformat(),
+            "startTime": _wall_clock(start_time),
+            "endDate": end_date.isoformat(),
+            "endTime": _wall_clock(end_time),
             "participants": participants or [],
             "isMultiDayReservable": False,
         }
@@ -182,6 +183,11 @@ class KurtClient:
         response.raise_for_status()
         _raise_if_session_bounce(response)
         return response.json()
+
+
+def _wall_clock(value: time | None) -> str:
+    # KURT wants `HH:MM`, and an empty string to mean "any time".
+    return value.strftime("%H:%M") if value is not None else ""
 
 
 def _maybe_json(response: httpx.Response) -> Any:

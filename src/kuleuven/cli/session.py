@@ -1,5 +1,5 @@
 import sys
-from email.utils import parsedate_to_datetime
+from datetime import UTC, datetime
 from typing import Annotated
 
 import httpx
@@ -68,23 +68,9 @@ class CliAuthenticationProvider:
         return None
 
 
-def _recency_key(device: NextauthDevice) -> tuple[int, float]:
-    # A device that has never logged in (no timestamp) sorts oldest. An
-    # unparseable timestamp is a format we don't understand — fail loudly
-    # rather than silently mis-rank it and push to the wrong device.
-    if not device.last_login:
-        return (0, 0.0)
-    try:
-        return (1, parsedate_to_datetime(device.last_login).timestamp())
-    except (TypeError, ValueError):
-        emit(
-            {
-                "status": "error",
-                "code": "unparseable_device_timestamp",
-                "message": f"Could not parse last-login time {device.last_login!r} for device {device.name!r}.",
-            },
-            exit_code=1,
-        )
+def _recency_key(device: NextauthDevice) -> datetime:
+    # A device that has never logged in (no timestamp) sorts oldest.
+    return device.last_login or datetime.min.replace(tzinfo=UTC)
 
 
 def _device_summary(device: NextauthDevice) -> dict:

@@ -1,10 +1,12 @@
 import json
+from datetime import UTC, date, datetime
 
 import pytest
 import respx
 from typer.testing import CliRunner
 
 from kuleuven.cli import app
+from kuleuven.kurt import API_BASE
 from kuleuven.toledo import (
     PORTAL_ENROLLMENTS_URL,
     ULTRA_API,
@@ -95,6 +97,99 @@ class TestCoursesMembers:
         assert payload["counts"] == {"STUDENT": 1}
 
 
+class TestCoursesSchedule:
+    def test_window_options_reach_the_api_as_iso_timestamps(
+        self, runner, portal_course_payload, ultra_membership_payload
+    ):
+        with respx.mock(assert_all_called=False) as mock:
+            mock.get(PORTAL_ENROLLMENTS_URL).respond(json=[portal_course_payload])
+            mock.get(f"{ULTRA_API}/users/me").respond(json={"id": "_me_1"})
+            mock.get(f"{ULTRA_API}/users/_me_1/memberships").respond(
+                json={"results": [ultra_membership_payload]}
+            )
+            route = mock.get(f"{ULTRA_API}/courses/_100001_1/schedule").respond(
+                json={"results": []}
+            )
+            result = runner.invoke(
+                app,
+                [
+                    "toledo", "courses", "schedule", "EX101a",
+                    "--from", "2026-05-25",
+                    "--to", "2026-06-01T09:30:00Z",
+                ],
+            )
+
+        assert result.exit_code == 0
+        params = dict(route.calls[0].request.url.params)
+        assert params["startTime"] == "2026-05-25T00:00:00"
+        assert params["endTime"] == "2026-06-01T09:30:00+00:00"
+
+    def test_unparseable_window_is_rejected_before_any_request(self, runner):
+        with respx.mock(assert_all_called=False):
+            result = runner.invoke(
+                app, ["toledo", "courses", "schedule", "EX101a", "--from", "yesterday"]
+            )
+
+        assert result.exit_code == 2
+
+
+class TestKurtWindows:
+    def test_search_sends_kurt_date_and_time_formats(self, runner):
+        with respx.mock(assert_all_called=False) as mock:
+            route = mock.get(f"{API_BASE}/resourcetypeavailabilities").respond(
+                json={"availabilities": [], "message": ""}
+            )
+            result = runner.invoke(
+                app,
+                [
+                    "kurt", "resources", "search",
+                    "--location", "10",
+                    "--type", "302",
+                    "--date", "2026-05-25",
+                    "--start", "09:00",
+                ],
+            )
+
+        assert result.exit_code == 0
+        params = dict(route.calls[0].request.url.params)
+        assert params["startDate"] == "2026-05-25"
+        assert params["endDate"] == "2026-05-25"
+        assert params["startTime"] == "09:00"
+        # An omitted time still has to go out as the empty "any time" string.
+        assert params["endTime"] == ""
+
+    def test_bad_date_exits_two_without_calling_kurt(self, runner):
+        with respx.mock(assert_all_called=False) as mock:
+            route = mock.get(f"{API_BASE}/resourcetypeavailabilities")
+            result = runner.invoke(
+                app,
+                [
+                    "kurt", "resources", "search",
+                    "--location", "10",
+                    "--type", "302",
+                    "--date", "next tuesday",
+                ],
+            )
+
+        assert result.exit_code == 2
+        assert not route.called
+
+    def test_reservations_keep_the_upstream_date_shape(
+        self, runner, kurt_reservation_payload
+    ):
+        # The models hold date/time objects now; the JSON contract must still
+        # be KURT's own `YYYY-MM-DD` and `HH:MM`.
+        with respx.mock(assert_all_called=False) as mock:
+            mock.get(f"{API_BASE}/reservations").respond(
+                json=[kurt_reservation_payload]
+            )
+            result = runner.invoke(app, ["kurt", "resources", "reservations"])
+
+        payload = parse_stdout(result)
+        assert payload["items"][0]["startDate"] == "2026-05-26"
+        assert payload["items"][0]["endTime"] == "12:00"
+
+
 class TestEmitContract:
     def test_emit_serializes_pydantic_models_via_default_hook(self):
         # The output module's _json_default falls back to model_dump for any
@@ -107,6 +202,16 @@ class TestEmitContract:
         dumped = _json_default(course)
         assert dumped["batch_uid"] == "X"
         assert dumped["display_name"] == "Y"
+
+    def test_emit_serializes_bare_timestamps_like_models_do(self):
+        # Dates that reach emit outside a model (session summaries, device
+        # listings) must render in the same ISO 8601 form models produce.
+        from kuleuven.cli.output import _json_default
+
+        assert _json_default(datetime(2026, 5, 26, 12, 28, 29, tzinfo=UTC)) == (
+            "2026-05-26T12:28:29Z"
+        )
+        assert _json_default(date(2026, 5, 26)) == "2026-05-26"
 
     def test_emit_raises_typeerror_for_unsupported_types(self):
         from kuleuven.cli.output import _json_default

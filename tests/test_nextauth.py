@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import pytest
 import typer
 
@@ -44,10 +46,19 @@ class TestParseDevicePicker:
         assert action == "/idp/profile/SAML2/POST/SSO?execution=e1s5"
         assert [device.name for device in devices] == ["Tablet", "Phone"]
         assert devices[0].account_id == "acct-tablet-0001"
-        assert devices[1].last_login == "Wed, 1 Jan 2025 00:00:00 GMT"
+        assert devices[1].last_login == datetime(2025, 1, 1, tzinfo=UTC)
 
     def test_returns_none_without_device_buttons(self):
         assert parse_device_picker('<form id="x"><input name="username"></form>') is None
+
+    def test_unparseable_last_login_fails_loudly(self):
+        # A format we don't understand must not silently become "never logged
+        # in", which would mis-rank the most recent device.
+        html = DEVICE_PICKER_HTML.replace(
+            "Mon, 1 Jan 2024 00:00:00 GMT", "whenever, really"
+        )
+        with pytest.raises(AuthenticationError):
+            parse_device_picker(html)
 
 
 class TestParseWaitParams:
@@ -64,8 +75,8 @@ class TestParseWaitParams:
 
 def _devices():
     return [
-        NextauthDevice("acct-tablet-0001", "Tablet", "Mon, 1 Jan 2024 00:00:00 GMT"),
-        NextauthDevice("acct-phone-0002", "Phone", "Wed, 1 Jan 2025 00:00:00 GMT"),
+        NextauthDevice("acct-tablet-0001", "Tablet", datetime(2024, 1, 1, tzinfo=UTC)),
+        NextauthDevice("acct-phone-0002", "Phone", datetime(2025, 1, 1, tzinfo=UTC)),
     ]
 
 
@@ -88,9 +99,7 @@ class TestDeviceSelection:
             provider.select_device(_devices())
         assert excinfo.value.exit_code == 2
 
-    def test_unparseable_timestamp_fails_loudly(self):
+    def test_device_without_last_login_sorts_oldest(self):
         provider = CliAuthenticationProvider(totp=None, device="most-recent")
-        bad = [NextauthDevice("acct-x", "Phone", "not a date")]
-        with pytest.raises(typer.Exit) as excinfo:
-            provider.select_device(bad)
-        assert excinfo.value.exit_code == 1
+        devices = [*_devices(), NextauthDevice("acct-new-0003", "Laptop", None)]
+        assert provider.select_device(devices).name == "Phone"

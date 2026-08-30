@@ -1,3 +1,5 @@
+from datetime import UTC, date, datetime, time
+
 import pytest
 
 from kuleuven.models import (
@@ -204,7 +206,7 @@ class TestContentItem:
 
     def test_modified_date_accepts_epoch_ms_int(self):
         # /contents/{parent}/children?@view=Summary returns ms-since-epoch.
-        # The model has to accept both shapes.
+        # Both shapes have to land on the same datetime type.
         item = ContentItem.model_validate(
             {
                 "id": "_x_1",
@@ -213,7 +215,8 @@ class TestContentItem:
                 "modifiedDate": 1775144522018,
             }
         )
-        assert item.modified_date == 1775144522018
+        assert item.modified_date == datetime.fromtimestamp(1775144522.018, tz=UTC)
+        assert item.model_dump(mode="json")["modifiedDate"].startswith("2026-04-02T")
 
 
 class TestApiEchoVsCurated:
@@ -310,8 +313,13 @@ class TestKurtModels:
     def test_reservation_alias_round_trip(self, kurt_reservation_payload):
         reservation = Reservation.model_validate(kurt_reservation_payload)
         assert reservation.resource_id == 7
-        assert reservation.start_time == "10:00"
-        # Dump in camelCase, matching the upstream contract used in PUT bodies
+        assert reservation.start_date == date(2026, 5, 26)
+        assert reservation.start_time == time(10, 0)
+        # Dump in camelCase and in KURT's own date/time formats, matching the
+        # upstream contract used in PUT bodies. Python mode too, because
+        # update_reservation posts model_dump() straight to the API.
         dumped = reservation.model_dump(by_alias=True)
         assert dumped["resourceId"] == 7
+        assert dumped["startDate"] == "2026-05-26"
         assert dumped["startTime"] == "10:00"
+        assert reservation.model_dump(mode="json")["endTime"] == "12:00"

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from kuleuven.shibboleth import find_form, parse_session_summary
 
 
@@ -46,7 +48,9 @@ class TestParseSessionSummary:
         assert summary is not None
         assert summary["attributes"]["uid"] == "r0123456"
         assert summary["expires_in_minutes"] == 2879
-        assert summary["authenticated_at"] == "2026-05-26T12:28:29Z"
+        assert summary["authenticated_at"] == datetime(
+            2026, 5, 26, 12, 28, 29, tzinfo=UTC
+        )
         assert summary["authentication_context_class"].endswith(
             "MobileTwoFactorContract"
         )

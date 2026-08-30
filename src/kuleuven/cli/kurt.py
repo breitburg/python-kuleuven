@@ -1,3 +1,4 @@
+from datetime import date, time
 from typing import Annotated
 
 import httpx
@@ -106,12 +107,42 @@ def resources_search_command(
     ctx: typer.Context,
     location_id: Annotated[int, typer.Option("--location", help="Location id")],
     resource_type_id: Annotated[int, typer.Option("--type", help="Resource type id")],
-    start_date: Annotated[str, typer.Option("--date", help="YYYY-MM-DD")],
+    start_date: Annotated[
+        date,
+        typer.Option(
+            "--date",
+            parser=date.fromisoformat,
+            metavar="YYYY-MM-DD",
+            help="Day to search, YYYY-MM-DD",
+        ),
+    ],
     end_date: Annotated[
-        str | None, typer.Option("--end-date", help="YYYY-MM-DD; defaults to --date")
+        date | None,
+        typer.Option(
+            "--end-date",
+            parser=date.fromisoformat,
+            metavar="YYYY-MM-DD",
+            help="Last day of the window, YYYY-MM-DD; defaults to --date",
+        ),
     ] = None,
-    start_time: Annotated[str, typer.Option("--start", help="HH:MM, blank for any")] = "",
-    end_time: Annotated[str, typer.Option("--end", help="HH:MM, blank for any")] = "",
+    start_time: Annotated[
+        time | None,
+        typer.Option(
+            "--start",
+            parser=time.fromisoformat,
+            metavar="HH:MM",
+            help="Earliest start time, HH:MM; omit for any",
+        ),
+    ] = None,
+    end_time: Annotated[
+        time | None,
+        typer.Option(
+            "--end",
+            parser=time.fromisoformat,
+            metavar="HH:MM",
+            help="Latest end time, HH:MM; omit for any",
+        ),
+    ] = None,
     zone_id: Annotated[int, typer.Option("--zone", help="Zone id, -1 for any")] = -1,
     participants: Annotated[int, typer.Option("--participants")] = 1,
     only_favorites: Annotated[bool, typer.Option("--only-favorites")] = False,
@@ -161,11 +192,41 @@ def resources_reservations_command(
 def resources_book_command(
     ctx: typer.Context,
     resource_id: Annotated[int, typer.Option("--resource", help="Resource id to book")],
-    start_date: Annotated[str, typer.Option("--date", help="YYYY-MM-DD")],
-    start_time: Annotated[str, typer.Option("--start", help="HH:MM")],
-    end_time: Annotated[str, typer.Option("--end", help="HH:MM")],
+    start_date: Annotated[
+        date,
+        typer.Option(
+            "--date",
+            parser=date.fromisoformat,
+            metavar="YYYY-MM-DD",
+            help="Day to book, YYYY-MM-DD",
+        ),
+    ],
+    start_time: Annotated[
+        time,
+        typer.Option(
+            "--start",
+            parser=time.fromisoformat,
+            metavar="HH:MM",
+            help="Start time, HH:MM",
+        ),
+    ],
+    end_time: Annotated[
+        time,
+        typer.Option(
+            "--end",
+            parser=time.fromisoformat,
+            metavar="HH:MM",
+            help="End time, HH:MM",
+        ),
+    ],
     end_date: Annotated[
-        str | None, typer.Option("--end-date", help="Defaults to --date")
+        date | None,
+        typer.Option(
+            "--end-date",
+            parser=date.fromisoformat,
+            metavar="YYYY-MM-DD",
+            help="Last day of the window, YYYY-MM-DD; defaults to --date",
+        ),
     ] = None,
     subject: Annotated[str, typer.Option("--subject")] = "Productivity Session",
     purpose: Annotated[str, typer.Option("--purpose")] = "",

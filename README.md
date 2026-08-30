@@ -50,6 +50,8 @@ Claude then gets every command as a tool and reuses your signed-in session. See 
 
 Every command exits `0` on success, `1` on auth or HTTP failure, and `2` on bad input. Errors are printed as JSON on stdout too, so a pipeline only parses one stream.
 
+Dates and times are parsed, not passed through. Any option that takes one rejects a value it cannot read, exiting `2` before a request goes out. In the output, every timestamp is ISO 8601 (`2026-05-01T00:00:00Z`), including the content items Blackboard reports as epoch milliseconds. The one exception is KURT reservations, which keep KURT's own split of a `YYYY-MM-DD` date and an `HH:MM` time.
+
 ### `kuleuven docs`
 
 Prints Markdown documentation for the whole command tree, generated from the live CLI, with the usage, arguments, and options of every command. Unlike every other command it prints raw Markdown, meant to be read or piped to a file:
@@ -78,7 +80,7 @@ On success it prints your session attributes and expiry:
   "session": {
     "attributes": { "uid": "r0123456", "KULMoreUnifiedUID": "q1234567", "...": "..." },
     "expires_in_minutes": 2880,
-    "authenticated_at": "2026-01-01T12:00:00.000Z"
+    "authenticated_at": "2026-01-01T12:00:00Z"
   }
 }
 ```
@@ -203,7 +205,7 @@ The response includes `counts` with `postedCount` and `unreadCount`, so an unrea
 
 #### `kuleuven toledo courses schedule`
 
-Returns the course's own calendar items, optionally windowed with `--from` and `--to` (ISO timestamps):
+Returns the course's own calendar items, optionally windowed with `--from` and `--to`. Both take a plain `YYYY-MM-DD` day (read as midnight) or a full ISO timestamp:
 
 ```sh
 kuleuven toledo courses schedule EX101a
@@ -338,7 +340,7 @@ Follow `next_page` in the response while more remain.
 
 ### KURT
 
-The `kuleuven kurt` commands book study seats, group rooms, and equipment. Dates are `YYYY-MM-DD` and times are `HH:MM` on the hour. A new day becomes bookable each evening one week out.
+The `kuleuven kurt` commands book study seats, group rooms, and equipment. Dates are `YYYY-MM-DD` and times are `HH:MM` on the hour, and anything else is rejected with exit `2`. A new day becomes bookable each evening one week out.
 
 #### `kuleuven kurt locations list`
 
@@ -528,25 +530,29 @@ To write somewhere other than a file, `stream_file_item(item, writable)` streams
 `KurtClient` mirrors the KURT commands. Find a location and resource type with `list_tiles()`, `get_location(id)`, and `list_resource_types(id)`, then search for a free slot and book it:
 
 ```python
+from datetime import date, time
+
 result = kurt.search_availability(
     location_id=10,
     resource_type_id=302,
-    start_date="2026-05-25",
-    end_date="2026-05-25",
-    start_time="09:00",
-    end_time="12:00",
+    start_date=date(2026, 5, 25),
+    end_date=date(2026, 5, 25),
+    start_time=time(9, 0),
+    end_time=time(12, 0),
 )
 seat = result.availabilities[0]
 
 kurt.create_reservation(
     resource_id=seat.resource_id,
     resource_name=seat.resource_name,
-    start_date="2026-05-25",
-    end_date="2026-05-25",
-    start_time="09:00",
-    end_time="12:00",
+    start_date=date(2026, 5, 25),
+    end_date=date(2026, 5, 25),
+    start_time=time(9, 0),
+    end_time=time(12, 0),
 )
 ```
+
+Windows are `datetime.date` and `datetime.time`, never strings. `search_availability` treats an omitted `start_time` or `end_time` as "any time"; `create_reservation` requires both.
 
 Passing `resource_name` is not optional. KURT rejects the request with a bare 400 unless it echoes the resource's name exactly, which is why the example takes it from the search result.
 
@@ -555,6 +561,8 @@ Manage what you booked with `list_reservations()`, `update_reservation(...)`, an
 ### Models
 
 Responses are Pydantic models in `kuleuven.models`. Call `.model_dump(mode="json")` to get the same shape the CLI prints. Curated models like `Course`, `Person`, and `FileItem` use snake_case fields, while API-echo models like `Reservation` and `Location` mirror the upstream JSON verbatim. Role values and content handlers come through raw, untranslated.
+
+Every date field is a `datetime.datetime`, `datetime.date`, or `datetime.time`, whatever the upstream sent. `Announcement.created_date` and `Course.last_accessed` parse an ISO string; `ContentItem.modified_date` parses either an ISO string or the epoch milliseconds the Ultra summary view returns, so both endpoints give you the same type. `Reservation` holds `start_date` / `end_date` as dates and `start_time` / `end_time` as times, and serializes them back to KURT's `YYYY-MM-DD` and `HH:MM` so a `model_dump()` can go straight into `update_reservation`.
 
 ### Exceptions
 

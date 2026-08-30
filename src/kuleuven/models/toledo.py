@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Self
 
 from pydantic import Field, computed_field
@@ -40,8 +41,8 @@ class Course(KuleuvenModel):
     role: str | None = None
     favorite: bool | None = None
     color: int | None = None
-    last_accessed: str | None = None
-    enrolled_at: str | None = None
+    last_accessed: datetime | None = None
+    enrolled_at: datetime | None = None
     user_hidden: bool | None = None
 
     @computed_field  # type: ignore[prop-decorator]
@@ -160,12 +161,12 @@ class Announcement(KuleuvenModel):
     body_html: str = Field(exclude=True)
     is_read: bool | None = None
     is_draft: bool | None = None
-    created_date: str | None = None
-    modified_date: str | None = None
+    created_date: datetime | None = None
+    modified_date: datetime | None = None
     creator_user_id: str | None = None
     type: str | None = None
-    start_date_restriction: str | None = None
-    end_date_restriction: str | None = None
+    start_date_restriction: datetime | None = None
+    end_date_restriction: datetime | None = None
     position: int | None = None
     permanent: bool | None = None
     push_notify: bool | None = None
@@ -375,8 +376,17 @@ class GradeEntry(ApiEchoModel):
     pass
 
 
+class DiscussionGenericData(ApiEchoModel):
+    # The `genericReadOnlyData` blob on a forum-link content item. Only the
+    # due date is typed; the rest rides along on extra="allow".
+    due_date: datetime | None = Field(default=None, alias="dueDate")
+
+
 class DiscussionItem(ApiEchoModel):
-    pass
+    modified_date: datetime | None = Field(default=None, alias="modifiedDate")
+    generic_read_only_data: DiscussionGenericData = Field(
+        default_factory=DiscussionGenericData, alias="genericReadOnlyData"
+    )
 
 
 class Forum(ApiEchoModel):
@@ -417,8 +427,8 @@ class ContentItem(ApiEchoModel):
     body: dict[str, Any] = Field(default_factory=dict)
     visibility: str | None = None
     # /contents/{id} returns an ISO string; the children @view=Summary endpoint
-    # returns epoch milliseconds. Accept both and let the CLI present verbatim.
-    modified_date: str | int | None = Field(default=None, alias="modifiedDate")
+    # returns epoch milliseconds. Pydantic parses both into a datetime.
+    modified_date: datetime | None = Field(default=None, alias="modifiedDate")
     position: int | None = None
     description: str | None = None
     state: str | None = None

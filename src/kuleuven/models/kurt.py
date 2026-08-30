@@ -1,8 +1,21 @@
-from typing import Any
+from datetime import date, time
+from typing import Annotated, Any
 
-from pydantic import Field
+from pydantic import Field, PlainSerializer
 
 from kuleuven.models._base import ApiEchoModel
+
+# KURT splits a booking window into a date and a wall-clock time, and it only
+# accepts them back in its own formats: `YYYY-MM-DD` and `HH:MM` (no seconds,
+# which `time.isoformat()` would emit). Serialize on the way out in both
+# python and JSON mode, because `update_reservation` posts `model_dump()`
+# straight to the API.
+KurtDate = Annotated[
+    date, PlainSerializer(lambda value: value.isoformat(), return_type=str)
+]
+KurtTime = Annotated[
+    time, PlainSerializer(lambda value: value.strftime("%H:%M"), return_type=str)
+]
 
 
 class UserInfo(ApiEchoModel):
@@ -99,6 +112,10 @@ class Resource(ApiEchoModel):
 class AvailabilitySlot(ApiEchoModel):
     resource_id: int | None = Field(default=None, alias="resourceId")
     resource_name: str | None = Field(default=None, alias="resourceName")
+    # `start`/`end` stay strings: unlike the reservation window, KURT's format
+    # for them was never captured, so parsing them into date/time objects
+    # would risk rejecting a live response. extra="allow" passes them through
+    # either way.
     start: str | None = None
     end: str | None = None
     available: bool | None = None
@@ -122,10 +139,10 @@ class Reservation(ApiEchoModel):
     purpose: str | None = None
     resource_id: int | None = Field(default=None, alias="resourceId")
     resource_name: str | None = Field(default=None, alias="resourceName")
-    start_date: str | None = Field(default=None, alias="startDate")
-    end_date: str | None = Field(default=None, alias="endDate")
-    start_time: str | None = Field(default=None, alias="startTime")
-    end_time: str | None = Field(default=None, alias="endTime")
+    start_date: KurtDate | None = Field(default=None, alias="startDate")
+    end_date: KurtDate | None = Field(default=None, alias="endDate")
+    start_time: KurtTime | None = Field(default=None, alias="startTime")
+    end_time: KurtTime | None = Field(default=None, alias="endTime")
     participants: list[ReservationParticipant] = Field(default_factory=list)
     is_multi_day_reservable: bool | None = Field(
         default=None, alias="isMultiDayReservable"

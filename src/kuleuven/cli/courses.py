@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 import httpx
@@ -13,6 +14,15 @@ courses_app = typer.Typer(
     no_args_is_help=True,
     help="Browse and manage Toledo courses and communities",
 )
+
+# A bare date means midnight, so `--from 2026-05-25` windows a whole day. The
+# last format keeps full ISO timestamps working, `Z` and numeric offsets alike.
+SCHEDULE_TIMESTAMP_FORMATS = [
+    "%Y-%m-%d",
+    "%Y-%m-%dT%H:%M",
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%dT%H:%M:%S%z",
+]
 
 
 def _http_error(error: Exception) -> None:
@@ -403,12 +413,22 @@ def schedule_command(
         str, typer.Argument(help="Course code, batchUid, BB pk, or portal UUID")
     ],
     start: Annotated[
-        str | None,
-        typer.Option("--from", help="ISO timestamp; inclusive start of window"),
+        datetime | None,
+        typer.Option(
+            "--from",
+            formats=SCHEDULE_TIMESTAMP_FORMATS,
+            metavar="TIMESTAMP",
+            help="YYYY-MM-DD or ISO timestamp; inclusive start of window",
+        ),
     ] = None,
     end: Annotated[
-        str | None,
-        typer.Option("--to", help="ISO timestamp; exclusive end of window"),
+        datetime | None,
+        typer.Option(
+            "--to",
+            formats=SCHEDULE_TIMESTAMP_FORMATS,
+            metavar="TIMESTAMP",
+            help="YYYY-MM-DD or ISO timestamp; exclusive end of window",
+        ),
     ] = None,
 ) -> None:
     """Show the per-course calendar. Often empty — `/portal/api/upcoming` is the user-wide source."""
